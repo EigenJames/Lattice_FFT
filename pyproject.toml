@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lattice-fft"
-version = "0.1.0"
+version = "0.2.0"
 description = "Utilities for simulating 2D lattices and their FFT signatures"
 authors = [{name = "EigenJames"}]
 readme = "README.md"

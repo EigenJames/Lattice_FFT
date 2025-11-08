@@ -70,6 +70,7 @@ These models follow the statistical treatments in solid-state diffraction texts 
 ├── lattice_fft/
 │   ├── __init__.py           # Public API surface
 │   ├── config.py             # Dataclasses describing lattice, defect, and jitter parameters
+│   ├── lattices.py           # Basis-specific coordinate generation utilities
 │   ├── plotting.py           # Matplotlib helpers for reciprocal/real-space figures
 │   └── simulation.py         # Lattice synthesis, defect models, FFT computation
 ├── FFT and lattice.ipynb     # Legacy pedagogical notebook (unchanged)
@@ -78,7 +79,7 @@ These models follow the statistical treatments in solid-state diffraction texts 
 └── pyproject.toml            # Optional packaging metadata
 ```
 
-The `lattice_fft` package factors the simulation pipeline into testable components. Dataclasses in `config.py` capture physical parameters, `simulation.py` converts those parameters into rendered lattices and their FFTs, and `plotting.py` provides publication-ready figures.
+The `lattice_fft` package factors the simulation pipeline into testable components. Dataclasses in `config.py` capture physical parameters (including atomic amplitude and validation logic), `lattices.py` provides reusable routines for generating square and hexagonal Bravais lattices, `simulation.py` converts those parameters into rendered lattices and their FFTs, and `plotting.py` provides publication-ready figures.
 
 ## 3. Installation and environment setup
 
@@ -117,29 +118,44 @@ from lattice_fft import (
     plot_real_and_fft,
 )
 
-params = LatticeParameters(ny=512, nx=512, px_size_angstrom=0.5,
-                           lattice_constant_angstrom=2.5, gaussian_sigma_px=1.0)
+params = LatticeParameters(
+    ny=512,
+    nx=512,
+    px_size_angstrom=0.5,
+    lattice_constant_angstrom=2.5,
+    atom_sigma_angstrom=0.9,
+    atom_amplitude=1.5,
+)
 defects = DefectParameters(defect_fraction=0.1, max_row_shift_px=3.0, remove_fraction=0.05)
 jitter = JitterParameters(sigma_px=0.8)
 
-result = simulate_lattice(params, basis="square",
-                          defect_params=defects,
-                          jitter=jitter)
+result = simulate_lattice(
+    params,
+    basis="square",
+    defect_params=defects,
+    jitter=jitter,
+)
 
-fig = plot_real_and_fft(result.image, result.fft_magnitude,
-                        kx=result.kx, ky=result.ky,
-                        title_suffix="Square lattice with defects")
+fig = plot_real_and_fft(
+    result.image,
+    result.fft_log_magnitude,
+    kx=result.kx,
+    ky=result.ky,
+    title_suffix="Square lattice with defects",
+)
 fig.tight_layout()
 fig.show()
 ```
 
 ### Core abstractions
 
-* **`LatticeParameters`** – lattice size, sampling pitch, lattice constant, and Gaussian width with convenient unit conversions.
-* **`DefectParameters`** – stochastic model for row shifts, vacancies, and disorder fractions.
-* **`JitterParameters`** – Debye–Waller-inspired Gaussian displacements.
-* **`simulate_lattice`** – generates lattice coordinates, applies disorder, renders intensities, performs FFT, and returns a `SimulationResult` container.
-* **`plot_real_and_fft`** – produces a paired Matplotlib figure for real-space and log-magnitude reciprocal space with labelled axes.
+* **`LatticeParameters`** – lattice size, sampling pitch, lattice constant, Gaussian width, and amplitude with convenient unit conversions and validation.
+* **`DefectParameters`** – stochastic model for row shifts, vacancies, and disorder fractions with physical bounds enforcement.
+* **`JitterParameters`** – Debye–Waller-inspired Gaussian displacements with positivity checks.
+* **`generate_lattice_positions` / `generate_lattice`** – deterministic lattice coordinate factories for square and hexagonal bases.
+* **`compute_fft` / `compute_fft_magnitude`** – convenience wrappers that return complex spectra alongside physically meaningful reciprocal axes.
+* **`simulate_lattice`** – generates lattice coordinates, applies disorder, renders intensities, performs FFT, and returns a `SimulationResult` container with pristine/defected coordinates, complex spectra, and both linear/log magnitudes.
+* **`plot_real_and_fft`** – produces a paired Matplotlib figure for real-space and log-magnitude reciprocal space with labelled axes and optional automatic log scaling.
 
 Auxiliary helpers such as `generate_lattice_positions`, `render_lattice_image`, and `compute_fft_magnitude` support custom pipelines and research extensions.
 
