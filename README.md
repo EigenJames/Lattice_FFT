@@ -161,27 +161,109 @@ The simulated FFT patterns directly correspond to:
 - **Electron Diffraction**: Ring patterns (polycrystalline), spot patterns (single crystal)
 - **High-Resolution TEM**: Fourier filtering for lattice imaging and strain mapping
 
-## Dependencies
+## Project Structure
 
-```python
-numpy          # Array operations and FFT
-matplotlib     # Visualization
-scipy          # (Optional) Peak fitting and analysis
+The repository is organized as a modular Python package for easy reuse and extension:
+
+```
+Lattice_FFT/
+├── lattice_fft/              # Main package
+│   ├── __init__.py           # Package initialization
+│   ├── lattice.py            # Lattice generation and defects
+│   ├── atoms.py              # Atomic rendering with Gaussians
+│   ├── fft_utils.py          # FFT computation utilities
+│   └── visualization.py      # Plotting functions
+├── FFT and lattice.ipynb     # Original comprehensive notebook
+├── demo.ipynb                # Package demonstration notebook
+├── setup.py                  # Package installation script
+├── requirements.txt          # Dependencies
+└── README.md                 # This file
+```
+
+### Module Overview
+
+**`lattice.py`**: Lattice structure generation
+- `make_lattice_positions()`: Create square or hexagonal lattices
+- `introduce_defects()`: Add dislocations and vacancies
+- `add_jitter()`: Simulate thermal disorder
+
+**`atoms.py`**: Atomic structure rendering
+- `gaussian_kernel()`: Generate 2D Gaussian atomic distributions
+- `stamp_atoms()`: Place atoms at specified positions
+- `render_lattice()`: Complete lattice image generation
+
+**`fft_utils.py`**: Reciprocal space analysis
+- `compute_fft()`: 2D FFT with log scaling
+- `reciprocal_axes()`: Generate k-space coordinates
+- `get_fft_magnitude()`: Extract FFT amplitude
+
+**`visualization.py`**: Publication-quality plots
+- `plot_lattice()`: Real-space visualization
+- `plot_fft()`: Reciprocal-space visualization
+- `plot_2x2_comparison()`: Perfect vs defected comparison
+- `plot_unit_cell_comparison()`: Multi-period analysis
+
+## Installation
+
+### Option 1: Pip Install (Editable Mode)
+
+```bash
+git clone https://github.com/EigenJames/Lattice_FFT.git
+cd Lattice_FFT
+pip install -e .
+```
+
+### Option 2: Direct Dependencies
+
+```bash
+pip install numpy matplotlib scipy
 ```
 
 ## Usage
 
-Open and execute the Jupyter notebook sequentially:
+### Quick Start with the Package
 
+```python
+from lattice_fft import (
+    make_lattice_positions,
+    render_lattice,
+    compute_fft,
+    plot_2x2_comparison
+)
+import numpy as np
+
+# Parameters
+ny, nx = 512, 512
+px_size_A = 0.5
+period_px = 10.86
+
+# Generate and visualize
+positions = make_lattice_positions(ny, nx, period_px, basis='square')
+lattice_img = render_lattice(ny, nx, positions, sigma_px=1.6)
+fft_img = compute_fft(lattice_img)
+```
+
+### Jupyter Notebooks
+
+**Original Analysis** (`FFT and lattice.ipynb`):
 ```bash
 jupyter notebook "FFT and lattice.ipynb"
 ```
+Comprehensive mathematical derivations and step-by-step demonstrations.
 
-Each cell is self-contained with explanatory markdown. Adjust parameters in the configuration cells:
+**Package Demo** (`demo.ipynb`):
+```bash
+jupyter notebook demo.ipynb
+```
+Concise examples using the modular package API.
+
+### Adjustable Parameters
+
 - `px_size_A`: Spatial resolution (Å/pixel)
 - `a_A`: Lattice constant
 - `atom_sigma_A`: Atomic width
 - `defect_fraction`, `remove_fraction`: Disorder magnitude
+- `basis`: 'square' or 'hex' for different symmetries
 
 ## Educational Value
 
